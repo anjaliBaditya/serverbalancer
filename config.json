@@ -1,0 +1,10 @@
+{
+    "port": "8009",
+    "servers": [
+      "https://www.facebook.com/",
+      "https://www.bing.com/",
+      "https://www.duckduckgo.com/"
+    ],
+    "healthCheckInterval": 10
+  }
+  

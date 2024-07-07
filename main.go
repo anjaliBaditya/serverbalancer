@@ -3,20 +3,28 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"time"
 )
 
 func main() {
-	serverList := []Server{
-		NewSimpleServer("https://www.facebook.com/"),
-		NewSimpleServer("https://www.bing.com/"),
-		NewSimpleServer("https://www.duckduckgo.com/"),
+	config, err := LoadConfig("config.json")
+	if err != nil {
+		fmt.Printf("Failed to load config: %v\n", err)
+		return
 	}
 
-	lb := NewLoadBalancer("8009", serverList)
+	serverList := []Server{}
+	for _, addr := range config.Servers {
+		serverList = append(serverList, NewSimpleServer(addr))
+	}
+
+	lb := NewLoadBalancer(config.Port, serverList)
+	go lb.HealthCheckServers(time.Duration(config.HealthCheckInterval) * time.Second)
+
 	http.HandleFunc("/", lb.HandleRedirect)
 
 	fmt.Printf("Load Balancer started at :%s\n", lb.port)
-	err := http.ListenAndServe(":"+lb.port, nil)
+	err = http.ListenAndServe(":"+lb.port, nil)
 	if err != nil {
 		fmt.Printf("Failed to start server: %v\n", err)
 	}
